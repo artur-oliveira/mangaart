@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mangaart/pages/utils/progress.dart';
 import 'package:mangaart/services/manga_service.dart';
 
 import '../models/manga_wrapper.dart';
@@ -33,10 +34,14 @@ class _MostViewedScreenState extends State<MostViewedScreen>
       children: [
         TabBar(
           controller: _tabController,
-          indicatorColor: Colors.orangeAccent, // Underline color for the selected tab
-          indicatorWeight: 3.0, // Thickness of the underline
-          labelColor: Colors.orangeAccent, // Color of selected tab label
-          unselectedLabelColor: Colors.white, // Color of unselected tab labels
+          indicatorColor: Colors.orangeAccent,
+          // Underline color for the selected tab
+          indicatorWeight: 3.0,
+          // Thickness of the underline
+          labelColor: Colors.orangeAccent,
+          // Color of selected tab label
+          unselectedLabelColor: Colors.white,
+          // Color of unselected tab labels
           tabs: const [
             Tab(text: 'Dia'),
             Tab(text: 'Semana'),
@@ -99,12 +104,7 @@ class _MostViewedContentState extends State<MostViewedContent> {
   @override
   Widget build(BuildContext context) {
     if (!mangas.isLoaded) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [CircularProgressIndicator()],
-        ),
-      );
+      return Progress.loading();
     }
     return MangaPage.buildGrid(context: context, mangas: mangas);
   }

@@ -33,11 +33,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_selectedIndex],
-      backgroundColor: Colors.blueGrey[800],
+      backgroundColor: Colors.grey[800],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onTabTapped,
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: Colors.grey[900],
         // Custom background color
         selectedItemColor: Colors.orangeAccent,
         // Color for the selected tab

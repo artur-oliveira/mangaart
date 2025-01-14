@@ -4,7 +4,7 @@ part 'manga.g.dart';
 
 @JsonSerializable()
 class Manga {
-  final String? name;
+  final String name;
   final String code;
   final String poster;
 

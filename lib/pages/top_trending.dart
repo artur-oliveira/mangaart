@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mangaart/pages/utils/progress.dart';
 
 import '../models/manga.dart';
 import '../models/manga_wrapper.dart';
@@ -49,12 +50,7 @@ class _TopTrendingScreenState extends State<TopTrendingScreen> {
 
   Widget getTopTrendingWidget() {
     if (!mangas.isLoaded) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [CircularProgressIndicator()],
-        ),
-      );
+      return Progress.loading();
     }
     return MangaPage.buildGrid(context: context, mangas: mangas);
   }

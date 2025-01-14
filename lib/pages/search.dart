@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mangaart/models/manga_wrapper.dart';
 import 'package:mangaart/pages/mangas_page.dart';
+import 'package:mangaart/pages/utils/progress.dart';
 import 'package:mangaart/services/manga_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -100,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget getSearchResultsWidget() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Progress.loading();
     }
     return Expanded(
         child: MangaPage.buildGrid(context: context, mangas: mangas));

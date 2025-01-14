@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mangaart/models/manga_wrapper.dart';
+import 'package:mangaart/pages/utils/progress.dart';
 import 'package:mangaart/services/manga_service.dart';
 
+import '../models/manga.dart';
+import 'manga_detail.dart';
 import 'mangas_page.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -47,19 +50,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     if (!mangas.isLoaded) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [CircularProgressIndicator()],
-        ),
-      );
+      return Progress.loading();
     }
-
     if (mangas.mangas.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.favorite_border, size: 80, color: Colors.grey),
             SizedBox(height: 16),
             Text(
@@ -71,6 +68,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       );
     }
 
-    return MangaPage.buildGrid(context: context, mangas: mangas);
+    return MangaPage.buildGrid(
+        context: context,
+        mangas: mangas,
+        onTap: (BuildContext context, Manga manga) {
+          return () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MangaDetailPage(manga: manga),
+              ),
+            ).then((reload) => {
+                  if (reload != null && reload) {_loadFavorites()}
+                });
+          };
+        });
   }
 }

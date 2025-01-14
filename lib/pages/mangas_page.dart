@@ -2,17 +2,30 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mangaart/models/manga_wrapper.dart';
 
+import '../models/manga.dart';
 import 'manga_card.dart';
 import 'manga_detail.dart';
 
 class MangaPage {
-  static Widget buildGrid({
-    required BuildContext context,
-    required MangaWrapper mangas,
-    int crossAxisCount = 3, // Default number of columns
-    double spacing = 8.0, // Default spacing
-    double childAspectRatio = 0.7, // Default size ratio
-  }) {
+  static GestureTapCallback buildOnTap(BuildContext context, Manga manga) {
+    return () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MangaDetailPage(manga: manga),
+        ),
+      );
+    };
+  }
+
+  static Widget buildGrid(
+      {required BuildContext context,
+      required MangaWrapper mangas,
+      Function(void)? onUnFav,
+      int crossAxisCount = 3, // Default number of columns
+      double spacing = 8.0, // Default spacing
+      double childAspectRatio = 0.7, // Default size ratio
+      Function? onTap}) {
     if (mangas.mangas.isEmpty) {
       return Center(
         child: Column(
@@ -29,7 +42,7 @@ class MangaPage {
         ),
       );
     }
-
+    onTap ??= buildOnTap;
     return GridView.builder(
       padding: EdgeInsets.all(spacing),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -42,14 +55,7 @@ class MangaPage {
       itemBuilder: (context, index) {
         final manga = mangas.mangas[index];
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MangaDetailPage(manga: manga),
-              ),
-            );
-          },
+          onTap: onTap!(context, manga),
           child: MangaCard(manga: manga),
         );
       },

@@ -7,7 +7,7 @@ part of 'manga.dart';
 // **************************************************************************
 
 Manga _$MangaFromJson(Map<String, dynamic> json) => Manga(
-      name: json['name'] as String?,
+      name: json['name'] as String,
       code: json['code'] as String,
       poster: json['poster'] as String,
     );
