@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mangaart/models/detailed_manga.dart';
@@ -15,7 +13,12 @@ class MangaDetailPage extends StatefulWidget {
   State<MangaDetailPage> createState() => _MangaDetailPageState();
 }
 
-class _MangaDetailPageState extends State<MangaDetailPage> {
+class _MangaDetailPageState extends State<MangaDetailPage>
+    with TickerProviderStateMixin {
+  TabController? _outerTabController;
+  TabController? _innerTabController;
+
+  bool isChapterTabSelected = true;
   DetailedManga? manga;
   String? error;
   bool? favoritedInitialState;
@@ -29,6 +32,13 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     super.initState();
     _loadMangaDetails();
     _loadFavorite();
+  }
+
+  @override
+  void dispose() {
+    _innerTabController?.dispose();
+    _outerTabController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -64,11 +74,31 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     }
   }
 
+  _updateInnerTabController() {
+    _innerTabController?.dispose();
+    _innerTabController = TabController(
+      length:
+          isChapterTabSelected ? manga!.chapters.length : manga!.volumes.length,
+      vsync: this,
+    );
+    setState(() {});
+  }
+
+  TabController? _buildOuterTabController(DetailedManga manga) {
+    if (manga.chapters.isNotEmpty && manga.chapters.isNotEmpty) {
+      var tabControl = TabController(length: 2, vsync: this);
+      tabControl.addListener(_updateInnerTabController);
+      return tabControl;
+    }
+    return null;
+  }
+
   Future<void> _loadMangaDetails() async {
     try {
       final detailedManga = await service.fetchMangaDetails(widget.manga.code);
       setState(() {
         manga = detailedManga;
+        _outerTabController = _buildOuterTabController(manga!);
       });
     } catch (e) {
       setState(() {
@@ -136,13 +166,13 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
       children: [
         AnimatedCrossFade(
           firstChild: Text(
-            manga!.synopsis,
+            manga!.synopsis.isEmpty ? 'No detail!' : manga!.synopsis,
             maxLines: 3,
             overflow: TextOverflow.fade,
             style: const TextStyle(fontSize: 14, color: Colors.white),
           ),
           secondChild: Text(
-            manga!.synopsis,
+            manga!.synopsis.isEmpty ? 'No detail!' : manga!.synopsis,
             style: const TextStyle(fontSize: 14, color: Colors.white),
           ),
           crossFadeState:
@@ -215,6 +245,37 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
     );
   }
 
+  Widget _buildChaptersContent() {
+    return Text('Capítulos');
+  }
+
+  Widget _buildVolumesContent() {
+    return Text('Volumes');
+  }
+
+  Widget buildChaptersAndVolumesTabs() {
+    if (manga!.volumes.isNotEmpty && manga!.chapters.isNotEmpty) {
+      return Flexible(
+          child: TabBarView(
+        controller: _outerTabController,
+        children: [
+          _buildChaptersContent(),
+          _buildVolumesContent(),
+        ],
+      ));
+    } else if (manga!.chapters.isNotEmpty) {
+      return _buildChaptersContent();
+    } else if (manga!.volumes.isNotEmpty) {
+      return _buildVolumesContent();
+    }
+    return const Center(
+      child: Text(
+        "Sem capítulos ou volumes disponíveis",
+        style: TextStyle(fontSize: 18, color: Colors.grey),
+      ),
+    );
+  }
+
   Widget getDetailMangaWidget() {
     return Center(
       child: Column(
@@ -233,6 +294,8 @@ class _MangaDetailPageState extends State<MangaDetailPage> {
           const SizedBox(height: 16),
           // Loading Indicator
           buildSynopsis(),
+          const SizedBox(height: 16),
+          buildChaptersAndVolumesTabs(),
         ],
       ),
     );

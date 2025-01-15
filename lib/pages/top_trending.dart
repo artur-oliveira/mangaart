@@ -1,11 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mangaart/pages/utils/progress.dart';
 
-import '../models/manga.dart';
 import '../models/manga_wrapper.dart';
 import '../services/manga_service.dart';
-import 'manga_card.dart';
 import 'mangas_page.dart';
 
 class TopTrendingScreen extends StatefulWidget {

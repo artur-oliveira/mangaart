@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mangaart/models/manga_wrapper.dart';
 import 'package:mangaart/pages/utils/progress.dart';
