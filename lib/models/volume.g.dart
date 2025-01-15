@@ -9,7 +9,7 @@ part of 'volume.dart';
 Volume _$VolumeFromJson(Map<String, dynamic> json) => Volume(
       name: json['name'] as String?,
       href: json['href'] as String?,
-      number: json['number'] as String?,
+      number: json['number'] as String,
       poster: json['poster'] as String?,
     );
 

@@ -75,21 +75,33 @@ class _MangaDetailPageState extends State<MangaDetailPage>
   }
 
   _updateInnerTabController() {
-    _innerTabController?.dispose();
-    _innerTabController = TabController(
-      length:
-          isChapterTabSelected ? manga!.chapters.length : manga!.volumes.length,
-      vsync: this,
-    );
+    if (_innerTabController == null ||
+        _innerTabController!.length !=
+            (isChapterTabSelected
+                ? manga!.chapters.length
+                : manga!.volumes.length)) {
+      _innerTabController?.dispose();
+      _innerTabController = TabController(
+        length: isChapterTabSelected
+            ? manga!.chapters.length
+            : manga!.volumes.length,
+        vsync: this,
+      );
+    }
     setState(() {});
   }
 
   TabController? _buildOuterTabController(DetailedManga manga) {
-    if (manga.chapters.isNotEmpty && manga.chapters.isNotEmpty) {
-      var tabControl = TabController(length: 2, vsync: this);
-      tabControl.addListener(_updateInnerTabController);
-      return tabControl;
+    if (manga.chapters.isNotEmpty && manga.volumes.isNotEmpty) {
+      if (_outerTabController == null) {
+        var tabControl = TabController(length: 2, vsync: this);
+        tabControl.addListener(_updateInnerTabController);
+        _outerTabController = tabControl;
+      }
+      _updateInnerTabController(); // Ensure inner controller is updated
+      return _outerTabController;
     }
+    _updateInnerTabController(); // Ensure inner controller is updated
     return null;
   }
 
@@ -163,6 +175,8 @@ class _MangaDetailPageState extends State<MangaDetailPage>
   Widget buildSynopsis() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+
       children: [
         AnimatedCrossFade(
           firstChild: Text(
@@ -246,7 +260,55 @@ class _MangaDetailPageState extends State<MangaDetailPage>
   }
 
   Widget _buildChaptersContent() {
-    return Text('Capítulos');
+    if (_innerTabController == null) {
+      return Center(child: CircularProgressIndicator());
+    }
+    return Column(
+      children: [
+        // Tabs for selecting languages or other chapter groups
+        TabBar(
+          isScrollable: true,
+          controller: _innerTabController,
+          indicatorColor: Colors.orangeAccent,
+          indicatorWeight: 3.0,
+          labelColor: Colors.orangeAccent,
+          unselectedLabelColor: Colors.white,
+          tabAlignment: TabAlignment.start,
+          // Aligns the TabBar to the left
+          tabs: manga!.chapters.map((chapter) {
+            return Tab(text: chapter.language);
+          }).toList(),
+        ),
+        // Scrollable horizontal list of chapters
+        Expanded(
+          child: TabBarView(
+            controller: _innerTabController,
+            children: manga!.chapters.map((chapter) {
+              return ListView.builder(
+                itemCount: chapter.chapters.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: ListTile(
+                      title: Text(chapter.chapters[index].name ?? 'Cap. $index',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          )),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Chapter selected!')),
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildVolumesContent() {
@@ -255,14 +317,32 @@ class _MangaDetailPageState extends State<MangaDetailPage>
 
   Widget buildChaptersAndVolumesTabs() {
     if (manga!.volumes.isNotEmpty && manga!.chapters.isNotEmpty) {
-      return Flexible(
-          child: TabBarView(
-        controller: _outerTabController,
-        children: [
-          _buildChaptersContent(),
-          _buildVolumesContent(),
-        ],
-      ));
+      return Expanded(
+        child: Column(
+          children: [
+            TabBar(
+              controller: _outerTabController,
+              indicatorColor: Colors.orangeAccent,
+              indicatorWeight: 3.0,
+              labelColor: Colors.orangeAccent,
+              unselectedLabelColor: Colors.white,
+              tabs: const [
+                Tab(text: "Capítulos"),
+                Tab(text: "Volumes"),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _outerTabController,
+                children: [
+                  _buildChaptersContent(),
+                  _buildVolumesContent(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     } else if (manga!.chapters.isNotEmpty) {
       return _buildChaptersContent();
     } else if (manga!.volumes.isNotEmpty) {
@@ -277,33 +357,33 @@ class _MangaDetailPageState extends State<MangaDetailPage>
   }
 
   Widget getDetailMangaWidget() {
-    return Center(
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildPosterWidget(manga!.poster),
-              const SizedBox(width: 16),
-              buildMangaText(manga!.name),
-            ],
-          ),
-          const SizedBox(height: 16),
-          getRowButtonsWidget(),
-          const SizedBox(height: 16),
-          // Loading Indicator
-          buildSynopsis(),
-          const SizedBox(height: 16),
-          buildChaptersAndVolumesTabs(),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            buildPosterWidget(manga!.poster),
+            const SizedBox(width: 16),
+            buildMangaText(manga!.name),
+          ],
+        ),
+        const SizedBox(height: 16),
+        getRowButtonsWidget(),
+        const SizedBox(height: 16),
+        // Loading Indicator
+        buildSynopsis(),
+        const SizedBox(height: 16),
+        // buildChaptersAndVolumesTabs(),
+      ],
     );
   }
 
   Widget getLoadingMangaWidget() {
     return Center(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -339,33 +419,34 @@ class _MangaDetailPageState extends State<MangaDetailPage>
       child = getDetailMangaWidget();
     }
     return Scaffold(
-      backgroundColor: Colors.grey[800],
-      body: SafeArea(
-          child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  color: Colors.white,
-                  onPressed: () {
-                    Navigator.pop(
-                        context, mustReload()); // Go back to the previous page
-                  },
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.black26,
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SafeArea(
+                child: Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    color: Colors.white,
+                    onPressed: () {
+                      Navigator.pop(context,
+                          mustReload()); // Go back to the previous page
+                    },
+                  ),
+                ],
+              ),
+            )),
+            SingleChildScrollView(
               child: child,
             ),
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     );
   }
 }

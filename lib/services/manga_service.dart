@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:mangaart/constants.dart';
 import 'package:mangaart/models/detailed_manga.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +26,6 @@ class MangaService {
   factory MangaService() {
     return _instance;
   }
-
 
   // Fetch trending mangas
   Future<List<Manga>> fetchMangas(String query) async {
@@ -57,6 +57,7 @@ class MangaService {
       final response = await _dio.get('/v1/mangas/$mangaCode');
       return DetailedManga.fromJson(response.data);
     } catch (e) {
+      debugPrintStack(stackTrace: StackTrace.current, label: 'manga_detail');
       throw Exception('Failed to load manga details: $e');
     }
   }
@@ -73,7 +74,8 @@ class MangaService {
   }
 
   Future<List<Manga>> getFavorites() async {
-    final jsonString = (await SharedPreferences.getInstance()).getString(_favoritesKey);
+    final jsonString =
+        (await SharedPreferences.getInstance()).getString(_favoritesKey);
     if (jsonString == null) return [];
     final List<dynamic> jsonList = jsonDecode(jsonString);
     return jsonList.map((el) => Manga.fromJson(el)).toList();
@@ -87,7 +89,8 @@ class MangaService {
 
   Future<void> saveFavorites(List<Manga> favorites) async {
     final jsonString = jsonEncode(favorites);
-    await (await SharedPreferences.getInstance()).setString(_favoritesKey, jsonString);
+    await (await SharedPreferences.getInstance())
+        .setString(_favoritesKey, jsonString);
   }
 
   Future<void> removeFavorite(Manga manga) {
